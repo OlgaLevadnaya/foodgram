@@ -13,7 +13,8 @@ from .serializers import (
     CustomUserSerializer, UserSetPasswordSerializer, UserReadSerializer,
     TagSerializer, IngredientSerializer, RecipeSerializer,
     RecipeReadSerializer, RecipeFavoriteSerializer,
-    ShoppingCartSerializer, AvatarSerializer, UserSubscriptionSerializer)
+    ShoppingCartSerializer, AvatarSerializer, UserSubscriptionSerializer
+)
 from core.filters import RecipeFilterSet
 from core.permissions import AuthorOrStaffOrReadOnly
 from recipes.models import (
