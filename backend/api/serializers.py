@@ -302,7 +302,7 @@ class UserSubscriptionReadSerializer(UserReadSerializer):
             recipes_limit = self.context.get(
                 'request').query_params.get('recipes_limit')
             return recipes[:int(recipes_limit)]
-        except:
+        except Exception:
             return recipes
 
     def get_recipes_count(self, obj):

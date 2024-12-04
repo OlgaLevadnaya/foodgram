@@ -4,6 +4,7 @@ from .models import (Favorite, Ingredient, Recipe, RecipeIngredient, RecipeTag,
                      ShoppingCart, Subscription, Tag)
 
 
-@admin.register(Tag, Ingredient, Recipe, RecipeTag, RecipeIngredient, Subscription, ShoppingCart, Favorite)
+@admin.register(Tag, Ingredient, Recipe, RecipeTag, RecipeIngredient,
+                Subscription, ShoppingCart, Favorite)
 class FoodgramAdmin(admin.ModelAdmin):
     pass
