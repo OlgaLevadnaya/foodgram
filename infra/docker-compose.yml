@@ -9,14 +9,14 @@ services:
 
   db:
     image: postgres:13.10
-    env_file: ../.env
+    env_file: .env
     volumes:
       - pg_data:/var/lib/postgresql/data
 
   backend:
     container_name: foodgram-back
     image: olgalevadnaya/foodgram_back
-    env_file: ../.env
+    env_file: .env
     depends_on:
       - db
     volumes:
@@ -26,7 +26,7 @@ services:
   frontend:
     container_name: foodgram-front
     image: olgalevadnaya/foodgram_front
-    env_file: ../.env
+    env_file: .env
     command: cp -r /app/build/. /frontend_static/
     volumes:
       - ../frontend/:/app/result_build/
