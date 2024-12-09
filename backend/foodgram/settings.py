@@ -2,6 +2,7 @@ import os
 
 from pathlib import Path
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-gkp_p(m5@$5rynn$(3d3)0nk^6gl#uvmd$1%xmtij4gy9%2a#7'
@@ -113,7 +114,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-STATIC_ROOT = BASE_DIR / 'collected_static'
+STATIC_ROOT = BASE_DIR / 'static'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
