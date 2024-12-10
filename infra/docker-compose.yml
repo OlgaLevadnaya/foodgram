@@ -33,7 +33,7 @@ services:
 
   gateway:
     container_name: foodgram-proxy
-    image: image: olgalevadnaya/foodgram_proxy
+    image: olgalevadnaya/foodgram_proxy
     ports:
       - "8000:80"
     volumes:
