@@ -82,7 +82,7 @@ jobs:
         with:
           context: ./infra/
           push: true
-          tags: olgalevadnaya/foodgram_gateway:latest
+          tags: olgalevadnaya/foodgram_proxy:latest
 
   deploy:
     runs-on: ubuntu-latest
