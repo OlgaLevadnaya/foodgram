@@ -4,6 +4,7 @@ volumes:
   pg_data:
   static:
   media:
+  docs:
 
 services:
 
@@ -38,7 +39,7 @@ services:
       - "8080:80"
     volumes:
       - ../frontend/build:/usr/share/nginx/html/
-      - ../docs/:/usr/share/nginx/html/api/docs/
+      - docs:/usr/share/nginx/html/api/docs/
       - static:/var/html/static/
       - media:/var/html/media/
     restart: always
