@@ -32,8 +32,8 @@ services:
       - ../frontend/:/app/result_build/
 
   gateway:
-    container_name: foodgram-gateway
-    image: image: olgalevadnaya/foodgram_gateway
+    container_name: foodgram-proxy
+    image: image: olgalevadnaya/foodgram_proxy
     ports:
       - "8000:80"
     volumes:
