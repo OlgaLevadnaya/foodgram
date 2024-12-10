@@ -31,9 +31,9 @@ services:
     volumes:
       - ../frontend/:/app/result_build/
 
-  nginx:
-    container_name: foodgram-proxy
-    image: nginx:1.25.4-alpine
+  gateway:
+    container_name: foodgram-gateway
+    image: image: olgalevadnaya/foodgram_gateway
     ports:
       - "8000:80"
     volumes:
