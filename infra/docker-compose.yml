@@ -9,6 +9,7 @@ volumes:
 services:
 
   db:
+    container_name: foodgram-db
     image: postgres:13.10
     env_file: .env
     volumes:
@@ -42,7 +43,7 @@ services:
       - docs:/usr/share/nginx/html/api/docs/
       - static:/var/html/static/
       - media:/var/html/media/
-    restart: always
     depends_on:
       - backend
       - frontend
+    restart: always
