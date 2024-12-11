@@ -5,4 +5,3 @@ django-filter==23.1
 Pillow==9.3.0
 django-cors-headers==3.13.0
 psycopg2-binary==2.9.3
-gunicorn==20.1.0
