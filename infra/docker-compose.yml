@@ -28,7 +28,7 @@ services:
     container_name: foodgram-front
     image: olgalevadnaya/foodgram_front
     env_file: ../.env
-    command: cp -r /app/build/. /static/
+    command: cp -r /app/frontend/build/. /static/
     volumes:
       - static:/static
 
