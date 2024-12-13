@@ -5,6 +5,7 @@ volumes:
   static:
   media:
   docs:
+  frontend:
 
 services:
 
@@ -30,7 +31,7 @@ services:
     image: olgalevadnaya/foodgram_front
     env_file: .env
     volumes:
-      - ../frontend/:/app/result_build/
+      - frontend:/app/result_build/
 
   gateway:
     container_name: foodgram-proxy
@@ -38,7 +39,7 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ../frontend/build:/usr/share/nginx/html/
+      - frontend/build:/usr/share/nginx/html/
       - docs:/usr/share/nginx/html/api/docs/
       - static:/var/html/static/
       - media:/var/html/media/
