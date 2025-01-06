@@ -10,7 +10,7 @@ SECRET_KEY = 'django-insecure-gkp_p(m5@$5rynn$(3d3)0nk^6gl#uvmd$1%xmtij4gy9%2a#7
 DEBUG = False
 
 ALLOWED_HOSTS = ['158.160.93.64', '127.0.0.1',
-                 'localhost', 'healthy-foodgram.zapto.org']
+                 'localhost', 'healthy-foodgram.hopto.org']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -27,8 +27,6 @@ INSTALLED_APPS = [
     'recipes.apps.RecipesConfig',
     'api.apps.ApiConfig',
     'core.apps.CoreConfig',
-
-
 ]
 
 MIDDLEWARE = [
@@ -100,7 +98,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-STATIC_ROOT = BASE_DIR / 'static'
+STATIC_ROOT = BASE_DIR / 'static/static'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -128,4 +126,4 @@ REST_FRAMEWORK = {
 
 MEDIA_URL = '/media/'
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = BASE_DIR / 'media'
