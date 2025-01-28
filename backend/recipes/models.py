@@ -92,14 +92,14 @@ class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='recipe_ingredient',
+        related_name='recipe_ingredients',
         verbose_name='Рецепт'
 
     )
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
-        related_name='recipe_ingredient',
+        related_name='recipe_ingredients',
         verbose_name='Ингредиент'
     )
     amount = models.IntegerField(
@@ -110,6 +110,11 @@ class RecipeIngredient(models.Model):
     class Meta:
         verbose_name = 'Рецепт-Ингредиент'
         verbose_name_plural = 'Рецепты-Ингредиенты'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name='unique_recipe_ingredient')
+        ]
 
     def __str__(self):
         return (f'{self.recipe.name} - {self.ingredient.name}')
@@ -119,19 +124,24 @@ class RecipeTag(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='recipe_tag',
+        related_name='recipe_tags',
         verbose_name='Рецепт'
     )
     tag = models.ForeignKey(
         Tag,
         on_delete=models.CASCADE,
-        related_name='recipe_tag',
+        related_name='recipe_tags',
         verbose_name='Тег'
     )
 
     class Meta:
         verbose_name = 'Рецепт-Тег'
         verbose_name_plural = 'Рецепты-Теги'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'tag'],
+                name='unique_recipe_tag')
+        ]
 
     def __str__(self):
         return (f'{self.recipe.name} - {self.tag.name}')

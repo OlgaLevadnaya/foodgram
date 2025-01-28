@@ -73,8 +73,7 @@ class CustomUserViewSet(UserViewSet):
             user.set_password(request.data['new_password'])
             user.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(
         methods=['post', 'delete'],
@@ -112,8 +111,7 @@ class CustomUserViewSet(UserViewSet):
                     subscription=subscription
                 ).delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
-            else:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def get_serializer_class(self):
         if self.action == 'set_password':
@@ -126,8 +124,7 @@ class CustomUserViewSet(UserViewSet):
             return UserSubscriptionSerializer
         if self.action == 'avatar':
             return AvatarSerializer
-        else:
-            return __class__.serializer_class
+        return __class__.serializer_class
 
     def get_permissions(self):
         if self.action == 'set_password' or self.action == 'me':
@@ -256,7 +253,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ).values(
             'recipe__ingredients__name',
             'recipe__ingredients__measurement_unit',
-            'recipe__recipe_ingredient__amount'
+            'recipe__recipe_ingredients__amount'
         )
         ingredients_dict = {}
         for ingredient in ingredients:
@@ -266,7 +263,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             )
             ingredients_dict[name_amount] = (
                 ingredients_dict.get(name_amount, 0)
-                + ingredient['recipe__recipe_ingredient__amount']
+                + ingredient['recipe__recipe_ingredients__amount']
             )
         result = [
             f'\n- {key} - {ingredients_dict[key]}' for key in ingredients_dict
