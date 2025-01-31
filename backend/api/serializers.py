@@ -115,11 +115,11 @@ class RecipeReadSerializer(serializers.ModelSerializer):
                   'is_favorited', 'is_in_shopping_cart',
                   'name', 'image', 'text', 'cooking_time')
 
-    def get_method_field(self, obj, class_name):
+    def get_method_field(self, obj, model_name):
         if self.context.get('request'):
             user = self.context.get('request').user
             if user.is_authenticated:
-                return class_name.objects.filter(
+                return model_name.objects.filter(
                     user=user,
                     recipe=obj
                 ).exists()
@@ -162,6 +162,19 @@ class RecipeSerializer(serializers.ModelSerializer):
     )
     image = Base64ImageField()
 
+    @staticmethod
+    def add_tags_ingredients(recipe, tags, ingredients):
+        RecipeTag.objects.bulk_create(
+            [RecipeTag(recipe=recipe, tag=tag) for tag in tags]
+        )
+        RecipeIngredient.objects.bulk_create(
+            [RecipeIngredient(
+                recipe=recipe,
+                ingredient_id=ingredient['id'],
+                amount=ingredient['amount']
+            ) for ingredient in ingredients]
+        )
+
     def create(self, validated_data):
 
         tags = validated_data.pop('tags', [])
@@ -169,18 +182,33 @@ class RecipeSerializer(serializers.ModelSerializer):
         recipe = Recipe.objects.create(
             author=self.context['request'].user,
             ** validated_data)
-        for tag in tags:
-            RecipeTag.objects.create(
-                recipe=recipe,
-                tag=tag)
-        for ingredient in ingredients:
-            current_ingredient = Ingredient.objects.get(id=ingredient['id'])
-            current_amount = ingredient['amount']
-            RecipeIngredient.objects.create(
-                recipe=recipe,
-                ingredient=current_ingredient,
-                amount=current_amount
-            )
+        self.add_tags_ingredients(recipe, tags, ingredients)
+
+        # RecipeTag.objects.bulk_create(
+        #    [RecipeTag(recipe=recipe, tag=tag) for tag in tags]
+        # )
+        # for tag in tags:
+        #   RecipeTag.objects.create(
+        #       recipe=recipe,
+        #       tag=tag)
+
+        # RecipeIngredient.objects.bulk_create(
+        #    [RecipeIngredient(
+        #        recipe=recipe,
+        #        ingredient_id=ingredient['id'],
+        #        amount=ingredient['amount']
+        #    ) for ingredient in ingredients]
+        # )
+
+        # for ingredient in ingredients:
+        #    # current_ingredient = Ingredient.objects.get(id=ingredient['id'])
+        #    current_amount = ingredient['amount']
+        #    RecipeIngredient.objects.create(
+        #        recipe=recipe,
+        #        ingredient_id=ingredient['id'],
+        #        amount=current_amount
+        #    )
+
         return recipe
 
     def update(self, instance, validated_data):
@@ -189,18 +217,19 @@ class RecipeSerializer(serializers.ModelSerializer):
         RecipeTag.objects.filter(recipe=instance).delete()
         RecipeIngredient.objects.filter(recipe=instance).delete()
         super().update(instance, validated_data)
-        for tag in tags:
-            RecipeTag.objects.create(
-                recipe=instance,
-                tag=tag)
-        for ingredient in ingredients:
-            current_ingredient = Ingredient.objects.get(id=ingredient['id'])
-            current_amount = ingredient['amount']
-            RecipeIngredient.objects.create(
-                recipe=instance,
-                ingredient=current_ingredient,
-                amount=current_amount
-            )
+        self.add_tags_ingredients(instance, tags, ingredients)
+        # for tag in tags:
+        #    RecipeTag.objects.create(
+        #        recipe=instance,
+        #        tag=tag)
+        # for ingredient in ingredients:
+        #    current_ingredient = Ingredient.objects.get(id=ingredient['id'])
+        #    current_amount = ingredient['amount']
+        #    RecipeIngredient.objects.create(
+        #        recipe=instance,
+        #        ingredient=current_ingredient,
+        #        amount=current_amount
+        #    )
         return instance
 
     def validate(self, data):
@@ -233,14 +262,29 @@ class RecipeSerializer(serializers.ModelSerializer):
                 'Некорректное количество ингредиента!'
             )
 
-        if not all(
-            Ingredient.objects.filter(
-                id=ingredient['id']
-            ).exists() for ingredient in ingredients
-        ):
+        ids = [ingredient['id'] for ingredient in ingredients]
+        if Ingredient.objects.filter(id__in=ids).count() != len(ids):
             raise serializers.ValidationError(
                 'Рецепт с несуществующим ингредиентом!'
             )
+
+        # conditions = Q()
+        # for ingredient in ingredients:
+        #    conditions |= Q(id=ingredient['id'])
+        # if not (
+        #    Ingredient.objects.filter(conditions).count() == len(ingredients)
+        # ):
+        #    raise serializers.ValidationError(
+        #        'Рецепт с несуществующим ингредиентом!')
+
+        # if not all(
+        #    Ingredient.objects.filter(
+        #        id=ingredient['id']
+        #    ).exists() for ingredient in ingredients
+        # ):
+        #    raise serializers.ValidationError(
+        #        'Рецепт с несуществующим ингредиентом!'
+        #    )
         return data
 
     def to_representation(self, instance):

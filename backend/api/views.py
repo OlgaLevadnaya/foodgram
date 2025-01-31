@@ -40,11 +40,10 @@ class CustomUserViewSet(UserViewSet):
     @action(
         methods=['put', 'delete'],
         detail=False,
-        url_path='me/avatar'
+        url_path='me/avatar',
+        permission_classes=permissions.IsAuthenticated
     )
     def avatar(self, request):
-        if request.user.is_anonymous:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
         if self.request.method == 'PUT':
             serializer = self.get_serializer(request.user, partial=True,
                                              data=request.data)
@@ -56,10 +55,9 @@ class CustomUserViewSet(UserViewSet):
                 serializer.data,
                 status=status.HTTP_200_OK
             )
-        if self.request.method == 'DELETE':
-            request.user.avatar = None
-            request.user.save()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        request.user.avatar = None
+        request.user.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @ action(
         methods=['post'],
@@ -69,20 +67,21 @@ class CustomUserViewSet(UserViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = self.request.user
-        if user.check_password(request.data['current_password']):
-            user.set_password(request.data['new_password'])
+        if user.check_password(
+            serializer.validated_data.get('current_password')
+        ):
+            user.set_password(serializer.validated_data.get('new_password'))
             user.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(
         methods=['post', 'delete'],
-        detail=True
+        detail=True,
+        permission_classes=permissions.IsAuthenticated
     )
     def subscribe(self, request, id):
         user = self.request.user
-        if request.user.is_anonymous:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
         subscription = get_object_or_404(
             User,
             id=id
@@ -102,16 +101,15 @@ class CustomUserViewSet(UserViewSet):
             serializer.save()
             return Response(serializer.data,
                             status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE':
-            if Subscription.objects.filter(
-                    user=user,
-                    subscription=subscription).exists():
-                Subscription.objects.filter(
-                    user=user,
-                    subscription=subscription
-                ).delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        if Subscription.objects.filter(
+                user=user,
+                subscription=subscription).exists():
+            Subscription.objects.filter(
+                user=user,
+                subscription=subscription
+            ).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def get_serializer_class(self):
         if self.action == 'set_password':
@@ -194,19 +192,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(serializer.data,
                             status=status.HTTP_201_CREATED)
 
-        if request.method == 'DELETE':
-            if not Favorite.objects.filter(
-                user=user,
-                recipe=recipe
-            ).exists():
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+        if not Favorite.objects.filter(
+            user=user,
+            recipe=recipe
+        ).exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
-            get_object_or_404(
-                Favorite,
-                user=user,
-                recipe=recipe
-            ).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        get_object_or_404(
+            Favorite,
+            user=user,
+            recipe=recipe
+        ).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         methods=['post', 'delete'],
