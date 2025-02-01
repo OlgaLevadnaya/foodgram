@@ -1,16 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
-from rest_framework.views import APIView
-
-from django.conf import settings
 
 from core.filters import RecipeFilterSet, IngredientFilterSet
 from core.permissions import AuthorOrStaffOrReadOnly
@@ -259,30 +256,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     )
     def get_link(self, request, *args, **kwargs):
-        hostname = request.META.get('HTTP_HOST')
-        if not hostname:
-            hostname = settings.ALLOWED_HOSTS[0]
-
-        relative_url = reverse('recipes:short-link',
-                               args=[self.kwargs.get('pk')])
-
+        relative_url = reverse(
+            'recipes:short-link',
+            args=[self.kwargs.get('pk')]
+        )
         short_link = request.build_absolute_uri(relative_url)
 
-        # relative_url = reverse('api:recipes-detail',
-        #                       args=[self.kwargs.get('pk')])
-        # redirect_url = request.build_absolute_uri(relative_url)
-
-        # (
-        #    f"http://{hostname}"
-        #    f"{reverse('api:short-link', args=[self.kwargs.get('pk')])}"
-        # )
-        return Response(
-            {'short-link': short_link}
-        )
-
-        # return Response(
-        #    {'short-link': redirect_url}
-        # )
+        return Response({'short-link': short_link})
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -295,23 +275,3 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         return [permission() for permission in self.permission_classes]
-
-
-# class RecipeRedirectView(APIView):
-#    def get(self, request, *args, **kwargs):
-#        hostname = request.META.get('HTTP_HOST')
-#        if not hostname:
-#            hostname = settings.ALLOWED_HOSTS[0]
-#        redirect_url = f"http://{hostname}/recipes/{self.kwargs.get('pk')}"
-#        return redirect(redirect_url)
-
-
-class RecipeRedirectView(APIView):
-    def get(self, request, *args, **kwargs):
-        print(self.kwargs)
-        print(request)
-        relative_url = reverse('api:recipes-detail',
-                               args=[self.kwargs.get('pk')])
-        redirect_url = request.build_absolute_uri(relative_url)
-        # redirect_url = f"http://{hostname}/recipes/{self.kwargs.get('pk')}"
-        return redirect(redirect_url)

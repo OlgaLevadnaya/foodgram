@@ -5,12 +5,11 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-gkp_p(m5@$5rynn$(3d3)0nk^6gl#uvmd$1%xmtij4gy9%2a#7'
+SECRET_KEY = os.getenv('SECRET_KEY', 'SECRET_KEY')
 
-DEBUG = False
+DEBUG = os.getenv('DEBUG') == 'True'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1',
-                 '158.160.93.64', 'healthy-foodgram.hopto.org']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1').split(';')
 
 INSTALLED_APPS = [
     'django.contrib.admin',

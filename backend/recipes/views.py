@@ -11,11 +11,3 @@ class RecipeRedirectView(APIView):
             hostname = settings.ALLOWED_HOSTS[0]
         redirect_url = f"http://{hostname}/recipes/{self.kwargs.get('pk')}"
         return redirect(redirect_url)
-
-        # print(self.kwargs)
-        # print(request)
-        # relative_url = reverse('api:recipes-detail',
-        #                       args=[self.kwargs.get('pk')])
-        # redirect_url = request.build_absolute_uri(relative_url)
-        # redirect_url = f"http://{hostname}/recipes/{self.kwargs.get('pk')}"
-        # return redirect(redirect_url)
