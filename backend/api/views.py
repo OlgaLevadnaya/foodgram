@@ -262,13 +262,27 @@ class RecipeViewSet(viewsets.ModelViewSet):
         hostname = request.META.get('HTTP_HOST')
         if not hostname:
             hostname = settings.ALLOWED_HOSTS[0]
-        short_link = (
-            f"http://{hostname}"
-            f"{reverse('api:short-link', args=[self.kwargs.get('pk')])}"
-        )
+
+        relative_url = reverse('recipes:short-link',
+                               args=[self.kwargs.get('pk')])
+
+        short_link = request.build_absolute_uri(relative_url)
+
+        # relative_url = reverse('api:recipes-detail',
+        #                       args=[self.kwargs.get('pk')])
+        # redirect_url = request.build_absolute_uri(relative_url)
+
+        # (
+        #    f"http://{hostname}"
+        #    f"{reverse('api:short-link', args=[self.kwargs.get('pk')])}"
+        # )
         return Response(
             {'short-link': short_link}
         )
+
+        # return Response(
+        #    {'short-link': redirect_url}
+        # )
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -283,10 +297,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return [permission() for permission in self.permission_classes]
 
 
-class RecipeRedirectView(APIView):
-    def get(self, request, *args, **kwargs):
-        hostname = request.META.get('HTTP_HOST')
-        if not hostname:
-            hostname = settings.ALLOWED_HOSTS[0]
-        redirect_url = f"http://{hostname}/recipes/{self.kwargs.get('pk')}"
-        return redirect(redirect_url)
+# class RecipeRedirectView(APIView):
+#    def get(self, request, *args, **kwargs):
+#        hostname = request.META.get('HTTP_HOST')
+#        if not hostname:
+#            hostname = settings.ALLOWED_HOSTS[0]
+#        redirect_url = f"http://{hostname}/recipes/{self.kwargs.get('pk')}"
+#        return redirect(redirect_url)
