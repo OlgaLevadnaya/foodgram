@@ -1,14 +1,14 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404  # , redirect
+from django.shortcuts import get_object_or_404, redirect
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
-# from rest_framework.views import APIView
+from rest_framework.views import APIView
 
 from django.conf import settings
 
@@ -304,3 +304,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
 #            hostname = settings.ALLOWED_HOSTS[0]
 #        redirect_url = f"http://{hostname}/recipes/{self.kwargs.get('pk')}"
 #        return redirect(redirect_url)
+
+
+class RecipeRedirectView(APIView):
+    def get(self, request, *args, **kwargs):
+        print(self.kwargs)
+        print(request)
+        relative_url = reverse('api:recipes-detail',
+                               args=[self.kwargs.get('pk')])
+        redirect_url = request.build_absolute_uri(relative_url)
+        # redirect_url = f"http://{hostname}/recipes/{self.kwargs.get('pk')}"
+        return redirect(redirect_url)

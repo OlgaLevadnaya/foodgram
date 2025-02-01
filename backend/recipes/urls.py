@@ -7,5 +7,5 @@ app_name = 'recipes'
 
 
 urlpatterns = [
-    path('<int:pk>/', RecipeRedirectView.as_view(), name='short-link'),
+    path('link/<int:pk>/', RecipeRedirectView.as_view(), name='short-link'),
 ]
