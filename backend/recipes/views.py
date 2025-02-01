@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.shortcuts import redirect
-from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
 
