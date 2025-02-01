@@ -9,8 +9,8 @@ SECRET_KEY = 'django-insecure-gkp_p(m5@$5rynn$(3d3)0nk^6gl#uvmd$1%xmtij4gy9%2a#7
 
 DEBUG = False
 
-ALLOWED_HOSTS = ['158.160.93.64', '127.0.0.1',
-                 'localhost', 'healthy-foodgram.hopto.org']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1',
+                 '158.160.93.64', 'healthy-foodgram.hopto.org']
 
 INSTALLED_APPS = [
     'django.contrib.admin',

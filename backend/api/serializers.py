@@ -30,14 +30,15 @@ class UserReadSerializer(serializers.ModelSerializer):
                   'last_name', 'is_subscribed', 'avatar')
 
     def get_is_subscribed(self, obj):
-        if self.context.get('request'):
-            user = self.context.get('request').user
-            if user.is_authenticated:
-                return Subscription.objects.filter(
-                    user=user,
-                    subscription=obj
-                ).exists()
-        return False
+        if not self.context.get('request'):
+            return False
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
+        return Subscription.objects.filter(
+            user=user,
+            subscription=obj
+        ).exists()
 
 
 class UserSetPasswordSerializer(serializers.ModelSerializer):
@@ -64,6 +65,18 @@ class AvatarSerializer(serializers.ModelSerializer):
         instance.avatar = validated_data.get('avatar', instance.avatar)
         instance.save()
         return instance
+
+    def validate(self, data):
+        avatar = data.get('avatar')
+        if avatar:
+            self._validate_image_size(avatar)
+        return data
+
+    def _validate_image_size(self, image):
+        if image.size > 10 * 2 ** 20:
+            raise serializers.ValidationError(
+                'Недопустимый размер изображения!'
+            )
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -116,36 +129,21 @@ class RecipeReadSerializer(serializers.ModelSerializer):
                   'name', 'image', 'text', 'cooking_time')
 
     def get_method_field(self, obj, model_name):
-        if self.context.get('request'):
-            user = self.context.get('request').user
-            if user.is_authenticated:
-                return model_name.objects.filter(
-                    user=user,
-                    recipe=obj
-                ).exists()
-        return False
+        if not self.context.get('request'):
+            return False
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
+        return model_name.objects.filter(
+            user=user,
+            recipe=obj
+        ).exists()
 
     def get_is_favorited(self, obj):
         return self.get_method_field(obj, Favorite)
-#        if self.context.get('request'):
-#            user = self.context.get('request').user
-#            if user.is_authenticated:
-#                return Favorite.objects.filter(
-#                    user=user,
-#                    recipe=obj
-#                ).exists()
-#        return False
 
     def get_is_in_shopping_cart(self, obj):
         return self.get_method_field(obj, ShoppingCart)
-#        if self.context.get('request'):
-#            user = self.context.get('request').user
-#            if user.is_authenticated:
-#                return ShoppingCart.objects.filter(
-#                    user=user,
-#                    recipe=obj
-#                ).exists()
-#        return False
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -183,32 +181,6 @@ class RecipeSerializer(serializers.ModelSerializer):
             author=self.context['request'].user,
             ** validated_data)
         self.add_tags_ingredients(recipe, tags, ingredients)
-
-        # RecipeTag.objects.bulk_create(
-        #    [RecipeTag(recipe=recipe, tag=tag) for tag in tags]
-        # )
-        # for tag in tags:
-        #   RecipeTag.objects.create(
-        #       recipe=recipe,
-        #       tag=tag)
-
-        # RecipeIngredient.objects.bulk_create(
-        #    [RecipeIngredient(
-        #        recipe=recipe,
-        #        ingredient_id=ingredient['id'],
-        #        amount=ingredient['amount']
-        #    ) for ingredient in ingredients]
-        # )
-
-        # for ingredient in ingredients:
-        #    # current_ingredient = Ingredient.objects.get(id=ingredient['id'])
-        #    current_amount = ingredient['amount']
-        #    RecipeIngredient.objects.create(
-        #        recipe=recipe,
-        #        ingredient_id=ingredient['id'],
-        #        amount=current_amount
-        #    )
-
         return recipe
 
     def update(self, instance, validated_data):
@@ -218,18 +190,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         RecipeIngredient.objects.filter(recipe=instance).delete()
         super().update(instance, validated_data)
         self.add_tags_ingredients(instance, tags, ingredients)
-        # for tag in tags:
-        #    RecipeTag.objects.create(
-        #        recipe=instance,
-        #        tag=tag)
-        # for ingredient in ingredients:
-        #    current_ingredient = Ingredient.objects.get(id=ingredient['id'])
-        #    current_amount = ingredient['amount']
-        #    RecipeIngredient.objects.create(
-        #        recipe=instance,
-        #        ingredient=current_ingredient,
-        #        amount=current_amount
-        #    )
         return instance
 
     def validate(self, data):
@@ -267,24 +227,6 @@ class RecipeSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Рецепт с несуществующим ингредиентом!'
             )
-
-        # conditions = Q()
-        # for ingredient in ingredients:
-        #    conditions |= Q(id=ingredient['id'])
-        # if not (
-        #    Ingredient.objects.filter(conditions).count() == len(ingredients)
-        # ):
-        #    raise serializers.ValidationError(
-        #        'Рецепт с несуществующим ингредиентом!')
-
-        # if not all(
-        #    Ingredient.objects.filter(
-        #        id=ingredient['id']
-        #    ).exists() for ingredient in ingredients
-        # ):
-        #    raise serializers.ValidationError(
-        #        'Рецепт с несуществующим ингредиентом!'
-        #    )
         return data
 
     def to_representation(self, instance):

@@ -14,29 +14,35 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='recipeingredient',
             name='ingredient',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='recipe_ingredients', to='recipes.ingredient', verbose_name='Ингредиент'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='recipe_ingredients', to='recipes.ingredient', verbose_name='Ингредиент'),
         ),
         migrations.AlterField(
             model_name='recipeingredient',
             name='recipe',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='recipe_ingredients', to='recipes.recipe', verbose_name='Рецепт'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='recipe_ingredients', to='recipes.recipe', verbose_name='Рецепт'),
         ),
         migrations.AlterField(
             model_name='recipetag',
             name='recipe',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='recipe_tags', to='recipes.recipe', verbose_name='Рецепт'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='recipe_tags', to='recipes.recipe', verbose_name='Рецепт'),
         ),
         migrations.AlterField(
             model_name='recipetag',
             name='tag',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='recipe_tags', to='recipes.tag', verbose_name='Тег'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='recipe_tags', to='recipes.tag', verbose_name='Тег'),
         ),
         migrations.AddConstraint(
             model_name='recipeingredient',
-            constraint=models.UniqueConstraint(fields=('recipe', 'ingredient'), name='unique_recipe_ingredient'),
+            constraint=models.UniqueConstraint(
+                fields=('recipe', 'ingredient'), name='unique_recipe_ingredient'),
         ),
         migrations.AddConstraint(
             model_name='recipetag',
-            constraint=models.UniqueConstraint(fields=('recipe', 'tag'), name='unique_recipe_tag'),
+            constraint=models.UniqueConstraint(
+                fields=('recipe', 'tag'), name='unique_recipe_tag'),
         ),
     ]

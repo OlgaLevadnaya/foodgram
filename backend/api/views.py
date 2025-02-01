@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import get_object_or_404
+from django.db.models import Sum
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import mixins, permissions, status, viewsets
@@ -9,7 +10,9 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
-from core.filters import RecipeFilterSet
+from django.conf import settings
+
+from core.filters import RecipeFilterSet, IngredientFilterSet
 from core.permissions import AuthorOrStaffOrReadOnly
 from recipes.models import (Favorite, Ingredient, Recipe, ShoppingCart,
                             Subscription, Tag)
@@ -86,28 +89,23 @@ class CustomUserViewSet(UserViewSet):
             User,
             id=id
         )
+        subscription_object = Subscription.objects.filter(
+            user=user,
+            subscription=subscription
+        )
         if request.method == 'POST':
             if user == subscription:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
-            if Subscription.objects.filter(
-               user=user,
-               subscription=subscription
-               ).exists():
+            if subscription_object.exists():
                 return Response(status=status.HTTP_400_BAD_REQUEST)
-
             serializer = self.get_serializer(
                 data={'user': user.id, 'subscription': subscription.id})
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data,
                             status=status.HTTP_201_CREATED)
-        if Subscription.objects.filter(
-                user=user,
-                subscription=subscription).exists():
-            Subscription.objects.filter(
-                user=user,
-                subscription=subscription
-            ).delete()
+        if subscription_object.exists():
+            subscription_object.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -161,7 +159,7 @@ class IngredientViewSet(
     permission_classes = (permissions.AllowAny,)
     pagination_class = None
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('name',)
+    filterset_class = IngredientFilterSet
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -171,18 +169,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilterSet
 
-    @action(
-        methods=['post', 'delete'],
-        detail=True
-    )
-    def favorite(self, request, *args, **kwargs):
+    def favorite_or_shopping_cart(self, request, action_type, *args, **kwargs):
+        if action_type == 'favorite':
+            model_name = Favorite
+        else:
+            model_name = ShoppingCart
+
         user = self.request.user
         recipe = get_object_or_404(Recipe, id=self.kwargs.get('pk'))
+        model_object = model_name.objects.filter(
+            user=user,
+            recipe=recipe
+        )
+
         if request.method == 'POST':
-            if Favorite.objects.filter(
-                user=user,
-                recipe=recipe
-            ).exists():
+            if model_object.exists():
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
             serializer = self.get_serializer(
@@ -192,14 +193,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(serializer.data,
                             status=status.HTTP_201_CREATED)
 
-        if not Favorite.objects.filter(
-            user=user,
-            recipe=recipe
-        ).exists():
+        if not model_object.exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         get_object_or_404(
-            Favorite,
+            model_name,
             user=user,
             recipe=recipe
         ).delete()
@@ -209,36 +207,19 @@ class RecipeViewSet(viewsets.ModelViewSet):
         methods=['post', 'delete'],
         detail=True
     )
+    def favorite(self, request, *args, **kwargs):
+        return self.favorite_or_shopping_cart(
+            request, 'favorite', args, kwargs
+        )
+
+    @action(
+        methods=['post', 'delete'],
+        detail=True
+    )
     def shopping_cart(self, request, *args, **kwargs):
-        user = self.request.user
-        recipe = get_object_or_404(Recipe, id=self.kwargs.get('pk'))
-
-        if request.method == 'POST':
-            if ShoppingCart.objects.filter(
-                user=user,
-                recipe=recipe
-            ).exists():
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-            serializer = self.get_serializer(
-                data={'user': user.id, 'recipe': recipe.id})
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data,
-                            status=status.HTTP_201_CREATED)
-
-        if request.method == 'DELETE':
-            if not ShoppingCart.objects.filter(
-                user=user,
-                recipe=recipe
-            ).exists():
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-
-            get_object_or_404(
-                ShoppingCart,
-                user=user,
-                recipe=recipe
-            ).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        return self.favorite_or_shopping_cart(
+            request, 'shopping_cart', args, kwargs
+        )
 
     @action(
         methods=['get'],
@@ -249,21 +230,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
             user=request.user
         ).values(
             'recipe__ingredients__name',
-            'recipe__ingredients__measurement_unit',
-            'recipe__recipe_ingredients__amount'
-        )
-        ingredients_dict = {}
-        for ingredient in ingredients:
-            name_amount = (
-                f"{ingredient['recipe__ingredients__name']} "
-                f"({ingredient['recipe__ingredients__measurement_unit']})"
-            )
-            ingredients_dict[name_amount] = (
-                ingredients_dict.get(name_amount, 0)
-                + ingredient['recipe__recipe_ingredients__amount']
-            )
+            'recipe__ingredients__measurement_unit'
+        ).annotate(
+            total_amount=Sum('recipe__recipe_ingredients__amount')
+        ).order_by('recipe__ingredients__name')
+
         result = [
-            f'\n- {key} - {ingredients_dict[key]}' for key in ingredients_dict
+            (
+                f"\n- {ingredient['recipe__ingredients__name']} - "
+                f"{ingredient['total_amount']}"
+                f"{ingredient['recipe__ingredients__measurement_unit']}"
+            ) for ingredient in ingredients
         ]
         result.insert(0, 'Cписок покупок:')
         response = HttpResponse(
@@ -282,9 +259,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     )
     def get_link(self, request, *args, **kwargs):
+        hostname = request.META.get('HTTP_HOST')
+        if not hostname:
+            hostname = settings.ALLOWED_HOSTS[0]
+        short_link = (
+            f"http://{hostname}"
+            f"{reverse('api:short-link', args=[self.kwargs.get('pk')])}"
+        )
         return Response(
-            {"short-link": reverse('api:short-link',
-                                   args=[self.kwargs.get('pk')])}
+            {'short-link': short_link}
         )
 
     def get_serializer_class(self):
@@ -301,8 +284,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 
 class RecipeRedirectView(APIView):
-
     def get(self, request, *args, **kwargs):
-        return HttpResponseRedirect(
-            reverse('api:recipes-detail', args=[self.kwargs.get('pk')])
-        )
+        hostname = request.META.get('HTTP_HOST')
+        if not hostname:
+            hostname = settings.ALLOWED_HOSTS[0]
+        redirect_url = f"http://{hostname}/recipes/{self.kwargs.get('pk')}"
+        return redirect(redirect_url)
