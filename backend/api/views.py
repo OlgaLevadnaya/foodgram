@@ -1,14 +1,14 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404#, redirect
+from django.shortcuts import get_object_or_404  # , redirect
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
-#from rest_framework.views import APIView
+# from rest_framework.views import APIView
 
 from django.conf import settings
 
