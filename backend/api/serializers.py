@@ -73,7 +73,7 @@ class AvatarSerializer(serializers.ModelSerializer):
         return data
 
     def _validate_image_size(self, image):
-        if image.size > 10 * 2 ** 20:
+        if image.size > user_constants.CUSTOMUSER_IMAGE_SIZE:
             raise serializers.ValidationError(
                 'Недопустимый размер изображения!'
             )
@@ -161,7 +161,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
 
     @staticmethod
-    def add_tags_ingredients(recipe, tags, ingredients):
+    def add_tags_and_ingredients(recipe, tags, ingredients):
         RecipeTag.objects.bulk_create(
             [RecipeTag(recipe=recipe, tag=tag) for tag in tags]
         )
@@ -180,7 +180,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         recipe = Recipe.objects.create(
             author=self.context['request'].user,
             ** validated_data)
-        self.add_tags_ingredients(recipe, tags, ingredients)
+        self.add_tags_and_ingredients(recipe, tags, ingredients)
         return recipe
 
     def update(self, instance, validated_data):
@@ -189,7 +189,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         RecipeTag.objects.filter(recipe=instance).delete()
         RecipeIngredient.objects.filter(recipe=instance).delete()
         super().update(instance, validated_data)
-        self.add_tags_ingredients(instance, tags, ingredients)
+        self.add_tags_and_ingredients(instance, tags, ingredients)
         return instance
 
     def validate(self, data):
